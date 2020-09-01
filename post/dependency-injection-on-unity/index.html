@@ -1,0 +1,284 @@
+<!doctype html><html lang=en data-theme><head><title>Ruben Gonzalez | Dependency Injection on Unity</title><meta charset=utf-8><meta name=generator content="Hugo 0.74.3"><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name=description content="By Ruben Gonzalez"><link rel=stylesheet href=/css/style.min.ef1c26beeb41dc113b0b2c514197bdbb73a61c7f832ddaeb309ba7e151912707.css integrity="sha256-7xwmvutB3BE7CyxRQZe9u3OmHH+DLdrrMJun4VGRJwc=" crossorigin=anonymous type=text/css><link rel=stylesheet href=/css/custom.min.2aacf473375189d93922609a45b32085eb1f6fc6c2451ad183509e50111a0039.css integrity="sha256-Kqz0czdRidk5ImCaRbMghesfb8bCRRrRg1CeUBEaADk=" crossorigin=anonymous type=text/css><link href=https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css rel=stylesheet integrity=sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN crossorigin=anonymous><link rel="shortcut icon" href=/favicons/favicon.ico type=image/x-icon><link rel=apple-touch-icon sizes=180x180 href=/favicons/apple-touch-icon.png><link rel=icon type=image/png sizes=32x32 href=/favicons/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicons/favicon-16x16.png><link rel=canonical href=/post/dependency-injection-on-unity/><script type=text/javascript src=/js/anatole-header.min.7e2fc0724240b28c6e214687e73a4a6eb6c196bbace546b9dc86e94cca120b5c.js integrity="sha256-fi/AckJAsoxuIUaH5zpKbrbBlrus5Ua53IbpTMoSC1w=" crossorigin=anonymous></script><meta name=twitter:card content="summary"><meta name=twitter:title content="Dependency Injection on Unity"><meta name=twitter:description content="Many has been written about dependency injection, even Unity folks wrote about it long time ago, and there are some good frameworks like Zenject, so what is so cool about dependency injection?"></head><body><div class="sidebar animated fadeInDown"><div class=logo-title><div class=title><img src=/rgonzalez_200px.jpg alt="profile picture"><h3><a href=/>Modern C# in Unity3D</a></h3><div class=description><p>By Ruben Gonzalez</p></div></div></div><ul class=social-links><li><a href=https://www.linkedin.com/in/ruben-gonzalez-50a4b230/ rel=me aria-label="Ruben's Linkedin"><i class="fa fa-2x fa-linkedin" aria-hidden=true></i></a></li><li><a href=https://github.com/ethdra/ rel=me aria-label="Ruben's GitHub"><i class="fa fa-2x fa-github" aria-hidden=true></i></a></li><li><a href=https://gamasutra.com/blogs/RubenGonzalez/1035428/ rel=me aria-label="Ruben's Gamasutra"><i class="fa fa-2x custom-gamasutra-icon" aria-hidden=true></i></a></li></ul><div class=footer><div class=by_farbox>&copy; Ruben Gonzalez 2020</div></div></div></div><div class=main><div class="page-top animated fadeInDown"><a role=button class=navbar-burger data-target=navMenu aria-label=menu aria-expanded=false><span aria-hidden=true></span><span aria-hidden=true></span><span aria-hidden=true></span></a><ul class=nav id=navMenu><li><a href=/>Home</a></li><li><a href=/post/>Posts</a></li><li><a href=/tags/>Tags</a></li><li><a href=/about/>About</a></li><li class=theme-switch-item><a class=theme-switch title="Switch Theme"><i class="fa fa-adjust fa-fw" aria-hidden=true></i></a></li></ul></div><div class=autopagerize_page_element><div class=content><a name=top></a><div class="post animated fadeInDown"><div class=post-aside><h3><a href=#top>Dependency Injection on Unity</a></h3><nav id=TableOfContents><ol><li><a href=#what-is-dependency-injection>What is dependency injection?</a></li><li><a href=#what-can-you-use-it-for>What can you use it for?</a><ol><li><a href=#unit-testing>Unit testing</a></li><li><a href=#avoid-singletons-or-not>Avoid singletons (or not)</a></li><li><a href=#playtest-any-class>Playtest any class</a></li></ol></li><li><a href=#dependency-injection-frameworks>Dependency injection frameworks</a><ol><li><a href=#register-dependencies>Register dependencies</a></li><li><a href=#inject-dependencies>Inject dependencies</a></li></ol></li><li><a href=#summary>Summary</a></li></ol></nav></div><div class=post-content><div class=post-title><h3>Dependency Injection on Unity</h3><div class=info><i class="fa fa-sun-o"></i><span class=date>Wed, Aug 12, 2020</span></div></div><p>Many has been written about <a href=https://en.wikipedia.org/wiki/Dependency_injection>dependency injection</a>, even <a href=https://blogs.unity3d.com/2014/05/07/dependency-injection-and-abstractions/>Unity</a> folks wrote about it long time ago, and there are some good frameworks like <a href=https://github.com/modesttree/Zenject>Zenject</a>, so what is so cool about dependency injection? Let&rsquo;s start by explaining briefly what it is and what can you use it for.</p><h2 id=what-is-dependency-injection>What is dependency injection?</h2><p>You can go to the <a href=https://en.wikipedia.org/wiki/Dependency_injection>Wikipedia entry</a> and find a complex definition, but in plain words, it&rsquo;s just a way for you class to reference other classes. So instead of creating instances of others classes directly or use <em>GetComponent</em> to obtain references to them, we receive them from outside, usually through the constructor in plain classes or using the <em>SerializeField</em> attribute.</p><p>Yes, you read it correctly, just by using <em>SerializeField</em> to obtain your references to other <em>MonoBehaviour</em>, you are already using dependency injection.</p><p>This is how your code might look like:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-csharp data-lang=csharp><span class=k>public</span> <span class=k>class</span> <span class=nc>OldWayInUnity</span>
+<span class=p>{</span>
+    <span class=k>private</span> <span class=n>OtherClass</span> <span class=n>other</span><span class=p>;</span>
+
+    <span class=k>void</span> <span class=n>Awake</span><span class=p>()</span>
+    <span class=p>{</span>
+        <span class=n>other</span> <span class=p>=</span> <span class=n>GetComponent</span><span class=p>&lt;</span><span class=n>OtherClass</span><span class=p>&gt;();</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+
+<span class=k>public</span> <span class=k>class</span> <span class=nc>OldWayInPlainClass</span>
+<span class=p>{</span>
+    <span class=k>private</span> <span class=k>readonly</span> <span class=n>OtherClass</span> <span class=n>other</span><span class=p>;</span>
+
+    <span class=k>public</span> <span class=n>OldWayInPlainClass</span><span class=p>()</span>
+    <span class=p>{</span>
+        <span class=n>other</span> <span class=p>=</span> <span class=k>new</span> <span class=n>OtherClass</span><span class=p>();</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></td></tr></table></div></div><p>And how it might look with dependency injection:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-csharp data-lang=csharp><span class=k>public</span> <span class=k>class</span> <span class=nc>WithDependencyInjectionInUnity</span>
+<span class=p>{</span>
+<span class=na>    [SerializeField]</span>
+    <span class=k>private</span> <span class=n>OtherClass</span> <span class=n>other</span><span class=p>;</span>
+<span class=p>}</span>
+
+<span class=k>public</span> <span class=k>class</span> <span class=nc>WithDependencyInjection</span>
+<span class=p>{</span>
+    <span class=k>private</span> <span class=k>readonly</span> <span class=n>OtherClass</span> <span class=n>other</span><span class=p>;</span>
+
+    <span class=k>public</span> <span class=n>WithDependencyInjection</span><span class=p>(</span><span class=n>OtherClass</span> <span class=n>other</span><span class=p>)</span>
+    <span class=p>{</span>
+        <span class=k>this</span><span class=p>.</span><span class=n>other</span> <span class=p>=</span> <span class=n>other</span><span class=p>;</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></td></tr></table></div></div><p>Not so much change, right? So what&rsquo;s so important about it? It&rsquo;s almost mandatory for the <a href=https://en.wikipedia.org/wiki/Dependency_inversion_principle>dependency inversion principle</a>. If you are familiar with <a href=https://en.wikipedia.org/wiki/SOLID>SOLID principles</a>, you already know it, but for those who don&rsquo;t know it, basically it&rsquo;s a way to decouple classes using interfaces. Instead of a direct dependency on another class, you use or create an interface that the other class implements, breaking the coupling between the two.</p><p>I won&rsquo;t go much more into it, there is plenty of information on this principle and the other SOLID principles and why are so important, but if you ever find yourself trying to reuse a class and giving up because it depends on so many other classes or if you are afraid of making changes to a class because too many others depend on it, the dependency inversion principle is your friend.</p><h2 id=what-can-you-use-it-for>What can you use it for?</h2><p>Decoupling is great, but decoupling just for the sake of decoupling is not enough, you need good reasons to change your mind and start using dependency injection. Here I&rsquo;ll detail some examples of things that you can do that are possible or improved by using dependency injection.</p><h3 id=unit-testing>Unit testing</h3><p><a href=https://en.wikipedia.org/wiki/Unit_testing>Unit testing</a>, for those are not familiar with that term, consist of writing small pieces of code that test if a certain class, function or similar complies with certain parameters. Unity offers it&rsquo;s own <a href=https://docs.unity3d.com/Manual/testing-editortestsrunner.html>framework</a> (based on NUnit) to write and run tests, both in editor and in runtime.
+These test allow us to be sure that your code does what it&rsquo;s supposed to and, what it&rsquo;s more important, stay sure along time that it&rsquo;s still ok, just by running your tests periodically.</p><p>You don&rsquo;t need dependency injection for unit testing, but if you ever struggled to load or instantiate a <em>MonoBehaviour</em> in a test because it&rsquo;s dependencies are too complex, then you&rsquo;ll be very interested in replacing those complex dependencies with mocks. If you are wondering, mocks are objects that are only there to provide some placeholder functionality for the test. There are some good mock frameworks that make creating these mocks really easy, for example, my personal choice is <a href=https://github.com/moq/moq4>Moq</a>.</p><p>This is something that you can do thanks to dependency injection, which allows us to inject those dependencies from outside, as opposed to the old way to obtain those from within your class.</p><p>See how you could be testing objects with complex dependencies:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span><span class=lnt>9
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-csharp data-lang=csharp><span class=na>[UnityTest]</span>
+<span class=k>public</span> <span class=n>IEnumerator</span> <span class=n>ComplexDependenciesMocked</span><span class=p>()</span>
+<span class=p>{</span>
+    <span class=kt>var</span> <span class=n>objectWithComplexDependencies</span> <span class=p>=</span> <span class=n>PrefabUtility</span><span class=p>.</span><span class=n>InstantiatePrefab</span><span class=p>(</span><span class=n>prefabReference</span><span class=p>);</span>
+    <span class=kt>var</span> <span class=n>complexDependency</span> <span class=p>=</span> <span class=k>new</span> <span class=n>Mock</span><span class=p>&lt;</span><span class=n>IComplexDependency</span><span class=p>&gt;().</span><span class=n>Setup</span><span class=p>(</span><span class=n>foo</span> <span class=p>=&gt;</span> <span class=n>foo</span><span class=p>.</span><span class=n>DoSomething</span><span class=p>(</span><span class=s>&#34;Complex&#34;</span><span class=p>)).</span><span class=n>Returns</span><span class=p>(</span><span class=k>true</span><span class=p>);</span>
+
+    <span class=n>Inject</span><span class=p>(</span><span class=n>objectWithComplexDependencies</span><span class=p>,</span> <span class=n>complexDependency</span><span class=p>);</span>
+    <span class=c1>// some Asserts follows
+</span><span class=c1></span><span class=p>}</span>
+</code></pre></td></tr></table></div></div><h3 id=avoid-singletons-or-not>Avoid singletons (or not)</h3><p>Singletons are a <a href=https://stackoverflow.com/questions/137975/what-is-so-bad-about-singletons>controversial topic</a>, sometimes hated but sometimes needed. One big critic to singletons is their implementation pattern using static members, which creates a strong coupling to that class, making it hard to test and decouple.</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-csharp data-lang=csharp><span class=k>public</span> <span class=k>class</span> <span class=nc>ControversialSingleton</span>
+<span class=p>{</span>
+    <span class=k>public</span> <span class=k>static</span> <span class=n>ControversialSingleton</span> <span class=n>Instance</span> <span class=p>{</span> <span class=k>get</span><span class=p>;</span> <span class=p>}</span> <span class=p>=&gt;</span> <span class=k>new</span> <span class=n>ControversialSingleton</span><span class=p>();</span>
+<span class=p>}</span>
+</code></pre></td></tr></table></div></div><p>This is something that dependency injection can solve, just with the fact that you are injecting dependencies from outside and thus you control the lifetime of the dependencies from outside, your class doesn&rsquo;t need to worry whether any dependency is a singleton or not. In fact, with dependency injection a singleton just means injecting the same instance to whoever request that dependency.</p><p>Avoiding the static implementation and treating it like any other class means that singletons are no longer a coupling or testing problem, so that&rsquo;s a win for dependency injection.</p><h3 id=playtest-any-class>Playtest any class</h3><p>If you are working in a team, you are probably splitting you project into pieces so each one can take care of each part, so you probably have several scenes and prefabs. One issue that arises from this splitting is how to playtest those scenes and prefabs without playing through your entire app, which is usually solved by adding some test objects in the scenes or prefabs that are disabled/removed when playing properly. There is nothing wrong with this approach, it works, but sometimes it can be prone to errors through forgotten test objects, or it requires manually creating test scenes for prefabs.</p><p>You can do it better thanks to dependency injection, because each of those scenes and prefabs have classes that declares their dependencies, you can write an editor script that loads them before entering playmode. Or even better, you can abuse the test framework and write a test that loads them (or mocks them) and stays there for a few minutes so you can play with our scene or prefab. This is quite useful for prefabs, you write long-running tests instead of manually create scenes.</p><p>Abusing the test framework to do long running editor tests looks like this:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span><span class=lnt>9
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-csharp data-lang=csharp><span class=na>[UnityTest]</span>
+<span class=k>public</span> <span class=n>IEnumerator</span> <span class=n>LongRunningTestForPrefab</span><span class=p>()</span>
+<span class=p>{</span>
+    <span class=n>PrefabUtility</span><span class=p>.</span><span class=n>InstantiatePrefab</span><span class=p>(</span><span class=n>prefabReference</span><span class=p>);</span>
+
+    <span class=k>yield</span> <span class=k>return</span> <span class=k>new</span> <span class=n>EnterPlayMode</span><span class=p>();</span>
+    <span class=k>yield</span> <span class=k>return</span> <span class=k>new</span> <span class=n>WaitForSeconds</span><span class=p>(</span><span class=m>60</span><span class=p>*</span><span class=m>5</span><span class=p>);</span>
+    <span class=k>yield</span> <span class=k>return</span> <span class=k>new</span> <span class=n>ExitPlayMode</span><span class=p>();</span>
+<span class=p>}</span>
+</code></pre></td></tr></table></div></div><h2 id=dependency-injection-frameworks>Dependency injection frameworks</h2><p>Dependency injection allows to write better code, that follows SOLID principles, more decoupled, with some complex architectures (e.g. <a href=https://jeffreypalermo.com/2008/07/the-onion-architecture-part-1/>onion architecture</a>), test every part of it and playtest it easily.</p><p>But it comes with a price, you have to write more code for all those interfaces, you find out that using SerializeField or GetComponent might be troublesome or even worse and you have to manually assign serialized fields in the scene or pass them in the constructor. This can be quite annoying and you can start thinking it&rsquo;s not worth, but this is where the dependency injection frameworks come to help.</p><p>Dependency injection frameworks take care of all the dependencies and automatically injects them wherever they&rsquo;re requested, which alleviates most of the extra code and provides with some extra goods, like the lifetime control we talked about in the singletons part. There are plenty of dependency injection frameworks, some very popular like <a href=https://github.com/modesttree/Zenject>Zenject</a>, each one with it&rsquo;s pros and cons, but all looks similar, everyone have a register dependencies step and a resolve dependencies and inject step.</p><p>Instead of looking into how one works, the best way to learn about them is to write one. And to make it easier to learn, instead of going all in with all the features we want in a dependency injection framework, we&rsquo;ll start building it progressively, from the simplest possible implementation to all the complexity we might want.</p><h3 id=register-dependencies>Register dependencies</h3><p>The first step is to register all the dependencies, usually in a collection (or several ones) where you store the dependency with it&rsquo;s desired lifetime. For the sake of simplicity, we&rsquo;ll only consider two lifetimes, either singleton or not singleton (same instance vs a new instance every time is request).</p><p>Let&rsquo;s see how it may look:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-csharp data-lang=csharp><span class=k>public</span> <span class=k>struct</span> <span class=nc>Dependency</span>
+<span class=p>{</span>
+    <span class=k>public</span> <span class=n>Type</span> <span class=n>Type</span> <span class=p>{</span> <span class=k>get</span><span class=p>;</span> <span class=k>set</span><span class=p>;</span> <span class=p>}</span>
+    <span class=k>public</span> <span class=kt>bool</span> <span class=n>IsSingleton</span> <span class=p>{</span> <span class=k>get</span><span class=p>;</span> <span class=k>set</span><span class=p>;</span> <span class=p>}</span>
+<span class=p>}</span>
+
+<span class=k>public</span> <span class=k>class</span> <span class=nc>DependenciesCollection</span>
+<span class=p>{</span>
+    <span class=k>private</span> <span class=n>List</span><span class=p>&lt;</span><span class=n>Dependency</span><span class=p>&gt;</span> <span class=n>dependencies</span> <span class=p>=</span> <span class=k>new</span> <span class=n>List</span><span class=p>&lt;</span><span class=n>Dependency</span><span class=p>&gt;();</span>
+
+    <span class=k>public</span> <span class=k>void</span> <span class=n>Add</span><span class=p>(</span><span class=n>Dependency</span> <span class=n>dependency</span><span class=p>)</span> <span class=p>=&gt;</span> <span class=n>dependencies</span><span class=p>.</span><span class=n>Add</span><span class=p>(</span><span class=n>dependency</span><span class=p>);</span>
+<span class=p>}</span>
+</code></pre></td></tr></table></div></div><p>That looks promising, but MonoBehaviours can&rsquo;t be instantiated like regular classes, so that Type won&rsquo;t be enough. We can change our Dependency to follow the <a href=https://en.wikipedia.org/wiki/Factory_method_pattern>factory pattern</a> but using C# Func to make it generic enough for our purposes. We&rsquo;ll still need the Type though, as that is what the classes will request for injection.</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-csharp data-lang=csharp><span class=k>public</span> <span class=k>struct</span> <span class=nc>Dependency</span>
+<span class=p>{</span>
+    <span class=k>public</span> <span class=n>Type</span> <span class=n>Type</span> <span class=p>{</span> <span class=k>get</span><span class=p>;</span> <span class=k>set</span><span class=p>;</span> <span class=p>}</span>
+    <span class=k>public</span> <span class=n>Func</span><span class=p>&lt;</span><span class=kt>object</span><span class=p>&gt;</span> <span class=n>Factory</span> <span class=p>{</span> <span class=k>get</span><span class=p>;</span> <span class=k>set</span><span class=p>;</span> <span class=p>}</span>
+    <span class=k>public</span> <span class=kt>bool</span> <span class=n>IsSingleton</span> <span class=p>{</span> <span class=k>get</span><span class=p>;</span> <span class=k>set</span><span class=p>;</span> <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></td></tr></table></div></div><p>This is more flexible, a function that returns an object can be a call to <em>GameObject.Instantiate</em> or <em>Resources.Load</em>, we can have different ways to create our objects, but how can we obtain a reference to a prefab, for example? We need to fill our collection from something that Unity can understand, a <em>MonoBehaviour</em> in the scene, a <em>ScriptableObject</em> in the project folder, a file in a <em>Resources</em> folder, we have plenty of options, each one with pros and cons.</p><p>For the moment, we&rsquo;ll opt for a <em>MonoBehaviour</em> in the scene, which is the simplest choice. We&rsquo;ll name it dependencies context, but it can have other names depending on the framework, e.g. container, bootstrap or startup, to name a few.</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-csharp data-lang=csharp><span class=k>public</span> <span class=k>class</span> <span class=nc>ExampleDependenciesContext</span> <span class=p>:</span> <span class=n>MonoBehaviour</span>
+<span class=p>{</span>
+<span class=na>    [SerializeField]</span>
+    <span class=k>private</span> <span class=n>ExampleDependencyMonoBehaviour</span> <span class=n>exampleDependency</span> <span class=p>=</span> <span class=k>default</span><span class=p>;</span>
+<span class=p>}</span>
+</code></pre></td></tr></table></div></div><p>Now that we have the reference, we need to put it in our dependencies collection, and we need this collection to be accessible not only by our dependencies context, but also by any other class that will need to resolve dependencies. There are several solutions for this problem, but I&rsquo;ll opt for the simplest one, a static property in a static class, and I&rsquo;ll name this class <em>DependenciesContext</em> as it is the one place all of our dependencies contexts (if we have more than one) will refer to register their dependencies.</p><p>I know, I know, static things are the sworn enemies of tests, but in this case it&rsquo;s innocuous because it doesn&rsquo;t have any code that needs testing or mocking, it&rsquo;s just one line of code, it basically does nothing of itself and it only acts as a container of dependencies, so it&rsquo;s ok to be coupled with this one.</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-csharp data-lang=csharp><span class=k>public</span> <span class=k>static</span> <span class=k>class</span> <span class=nc>DependenciesContext</span>
+<span class=p>{</span>
+    <span class=k>public</span> <span class=k>static</span> <span class=n>DependenciesCollection</span> <span class=n>Dependencies</span> <span class=p>{</span> <span class=k>get</span><span class=p>;</span> <span class=p>}</span> <span class=p>=</span> <span class=k>new</span> <span class=n>DependenciesCollection</span><span class=p>();</span>
+<span class=p>}</span>
+</code></pre></td></tr></table></div></div><p>With this class is now clear how to access our dependencies collection and we can complete our <em>ExampleDependenciesContext</em> class.</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-csharp data-lang=csharp><span class=k>public</span> <span class=k>class</span> <span class=nc>ExampleDependenciesContext</span> <span class=p>:</span> <span class=n>MonoBehaviour</span>
+<span class=p>{</span>
+<span class=na>    [SerializeField]</span>
+    <span class=k>private</span> <span class=n>ExampleDependencyMonoBehaviour</span> <span class=n>exampleDependency</span> <span class=p>=</span> <span class=k>default</span><span class=p>;</span>
+
+    <span class=k>private</span> <span class=k>void</span> <span class=n>Awake</span><span class=p>()</span>
+    <span class=p>{</span>
+        <span class=n>DependenciesContext</span><span class=p>.</span><span class=n>Dependencies</span><span class=p>.</span><span class=n>Add</span><span class=p>(</span><span class=k>new</span> <span class=n>Dependency</span> <span class=p>{</span>
+            <span class=n>Type</span> <span class=p>=</span> <span class=k>typeof</span><span class=p>(</span><span class=n>ExampleDependencyMonoBehaviour</span><span class=p>),</span>
+            <span class=n>Factory</span> <span class=p>=</span> <span class=p>()</span> <span class=p>=&gt;</span> <span class=n>Instantiate</span><span class=p>(</span><span class=n>exampleDependency</span><span class=p>).</span><span class=n>GetComponent</span><span class=p>&lt;</span><span class=n>ExampleDependencyMonoBehaviour</span><span class=p>&gt;(),</span>
+            <span class=n>IsSingleton</span> <span class=p>=</span> <span class=k>true</span>
+            <span class=p>});</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></td></tr></table></div></div><p>And this is it, we can now store all of our dependencies in a single collection, but how can we obtain these dependencies from other class, that is, how can we inject them?</p><h3 id=inject-dependencies>Inject dependencies</h3><p>Imagine we have a <em>MonoBehaviour</em> which depends on another <em>MonoBehaviour</em>. Usually we&rsquo;ll use <em>GetComponent</em> to obtain it if it were in the same <em>GameObject</em> or <em>[SerializeField]</em> to manually drag it from the scene, but both require knowing where this dependency <em>MonoBehaviour</em> is, and some manual scene work wherever our dependant <em>MonoBehaviour</em> is.</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-csharp data-lang=csharp><span class=k>public</span> <span class=k>class</span> <span class=nc>ExampleDependant</span> <span class=p>:</span> <span class=n>MonoBehaviour</span>
+<span class=p>{</span>
+    <span class=k>private</span> <span class=n>ExampleDependencyMonoBehaviour</span> <span class=n>dependency</span> <span class=p>=</span> <span class=k>null</span><span class=p>;</span>
+<span class=p>}</span>
+</code></pre></td></tr></table></div></div><p>We can do better with our dependency context, which already contains all of our dependencies and we only need to care once about where they are. We just need to add a function to our <em>DependenciesCollection</em> to retrieve those dependencies. We just need to call the <em>Dependency.Factory</em> delegate to create the dependencies and cache our singletons to make sure we return the same instance every time. We can also add a generic variant for some nice syntax sugar.</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-csharp data-lang=csharp><span class=k>public</span> <span class=k>class</span> <span class=nc>DependenciesCollection</span>
+<span class=p>{</span>
+    <span class=k>private</span> <span class=n>Dictionary</span><span class=p>&lt;</span><span class=n>Type</span><span class=p>,</span> <span class=kt>object</span><span class=p>&gt;</span> <span class=n>singletons</span> <span class=p>=</span> <span class=k>new</span> <span class=n>Dictionary</span><span class=p>&lt;</span><span class=n>Type</span><span class=p>,</span> <span class=kt>object</span><span class=p>&gt;();</span>
+
+    <span class=k>public</span> <span class=kt>object</span> <span class=n>Get</span><span class=p>(</span><span class=n>Type</span> <span class=n>type</span><span class=p>)</span>
+    <span class=p>{</span>
+        <span class=k>if</span> <span class=p>(!</span><span class=n>dependencies</span><span class=p>.</span><span class=n>ContainsKey</span><span class=p>(</span><span class=n>type</span><span class=p>))</span>
+        <span class=p>{</span>
+            <span class=k>throw</span> <span class=k>new</span> <span class=n>ArgumentException</span><span class=p>(</span><span class=s>&#34;Type is not a dependency: &#34;</span> <span class=p>+</span> <span class=n>type</span><span class=p>.</span><span class=n>FullName</span><span class=p>);</span>
+        <span class=p>}</span>
+
+        <span class=kt>var</span> <span class=n>dependency</span> <span class=p>=</span> <span class=n>dependencies</span><span class=p>[</span><span class=n>type</span><span class=p>];</span>
+        <span class=k>if</span> <span class=p>(</span><span class=n>dependency</span><span class=p>.</span><span class=n>IsSingleton</span><span class=p>)</span>
+        <span class=p>{</span>
+            <span class=k>if</span> <span class=p>(!</span><span class=n>singletons</span><span class=p>.</span><span class=n>ContainsKey</span><span class=p>(</span><span class=n>type</span><span class=p>))</span>
+            <span class=p>{</span>
+                <span class=n>singletons</span><span class=p>.</span><span class=n>Add</span><span class=p>(</span><span class=n>type</span><span class=p>,</span> <span class=n>dependency</span><span class=p>.</span><span class=n>Factory</span><span class=p>());</span>
+            <span class=p>}</span>
+            <span class=k>return</span> <span class=n>singletons</span><span class=p>[</span><span class=n>type</span><span class=p>];</span>
+        <span class=p>}</span>
+        <span class=k>else</span>
+        <span class=p>{</span>
+            <span class=k>return</span> <span class=n>dependency</span><span class=p>.</span><span class=n>Factory</span><span class=p>();</span>
+        <span class=p>}</span>
+    <span class=p>}</span>
+
+    <span class=k>public</span> <span class=n>T</span> <span class=n>Get</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;()</span>
+    <span class=p>{</span>
+        <span class=k>return</span> <span class=p>(</span><span class=n>T</span><span class=p>)</span><span class=n>Get</span><span class=p>(</span><span class=k>typeof</span><span class=p>(</span><span class=n>T</span><span class=p>));</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></td></tr></table></div></div><p>So now we just add some initialization code to our dependant <em>MonoBehaviour</em> and we can have all of our dependencies obtained from outside without caring about where they are, or even if they are singletons or not.</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span><span class=lnt>9
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-csharp data-lang=csharp><span class=k>public</span> <span class=k>class</span> <span class=nc>ExampleDependant</span> <span class=p>:</span> <span class=n>MonoBehaviour</span>
+<span class=p>{</span>
+    <span class=k>private</span> <span class=n>ExampleDependencyMonoBehaviour</span> <span class=n>dependency</span> <span class=p>=</span> <span class=k>null</span><span class=p>;</span>
+
+    <span class=k>private</span> <span class=k>void</span> <span class=n>Awake</span><span class=p>()</span>
+    <span class=p>{</span>
+        <span class=n>dependency</span> <span class=p>=</span> <span class=n>DependenciesContext</span><span class=p>.</span><span class=n>Dependencies</span><span class=p>.</span><span class=n>Get</span><span class=p>&lt;</span><span class=n>ExampleDependencyMonoBehaviour</span><span class=p>&gt;();</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></td></tr></table></div></div><h2 id=summary>Summary</h2><p>We have demystified dependency injection with some sample code which I hope is simple enough to understand yet useful enough to start using it in your existing code if you want to. You can see all the code from this article along with some sample usage in my GitHub repository called <a href=https://github.com/moderncsharpinunity/SimpleDependencyInjectionV1>SimpleDependencyInjectionV1</a>.</p><p>This injection method is not ideal, we still need to write code to get our dependencies in each class and we can have initialization issues if we don&rsquo;t make sure that our dependencies context runs before any dependency retrieval, but we&rsquo;ll continue to improve it in the part 2 of dependency injection on unity (coming soon).</p></div><div class=post-footer><div class=info><span class=separator><a class=tag href=/tags/unity3d/>unity3d</a><a class=tag href=/tags/dependency-injection/>dependency-injection</a></span></div></div></div></div></div></div></body><script type=text/javascript src=/js/jquery.min.86b1e8f819ee2d9099a783e50b49dff24282545fc40773861f9126b921532e4c.js integrity="sha256-hrHo+BnuLZCZp4PlC0nf8kKCVF/EB3OGH5EmuSFTLkw=" crossorigin=anonymous></script><script type=text/javascript src=/js/bundle.min.0f9c74cb78f13d1f15f33daff4037c70354f98acfbb97a6f61708966675c3cae.js integrity="sha256-D5x0y3jxPR8V8z2v9AN8cDVPmKz7uXpvYXCJZmdcPK4=" crossorigin=anonymous></script><script type=text/javascript src=/js/medium-zoom.min.92f21c856129f84aeb719459b3e6ac621a3032fd7b180a18c04e1d12083f8aba.js integrity="sha256-kvIchWEp+ErrcZRZs+asYhowMv17GAoYwE4dEgg/iro=" crossorigin=anonymous></script></html></body></html>
