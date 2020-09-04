@@ -1,0 +1,131 @@
+@charset "UTF-8";
+
+/* Begin Changes to screen proportions */
+.sidebar {
+    width: 20%;
+}
+
+.page-top, .content {
+    width: 80%;
+}
+
+.post-content {
+    width: 60%;
+}
+
+.post-aside {
+    float: right;
+    width: 20%;
+    margin-right: 20%;
+}
+
+@media screen and (max-width: 960px) {
+    .sidebar {
+        width: 100%;
+    }
+
+    .page-top {
+        width: 100%;        
+    }
+
+    .content {
+        width: 100%;
+    }
+    
+    .post-content {
+        width: 100%;
+    }
+
+    .post-aside {
+        display: none;
+    }
+}
+
+
+/* Custom Gamasutra icon */
+.custom-gamasutra-icon:before {
+    content: "\f09b";
+}
+
+.custom-gamasutra-icon {
+    mask-image: url('/social/gamasutra_icon.png');
+    -webkit-mask-image: url('/social/gamasutra_icon.png');
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position-y: 2px;
+    background-color: var(--heading-color); 
+}
+
+a:hover > .custom-gamasutra-icon {
+    background-color: #2660ab; 
+}
+
+
+/* Changes to post-date layout in listings */
+.list-with-title .listing .listing-post .post-time {
+    float: none;
+}
+
+
+/* Remove annoying animation on load */ 
+.fadeInDown {
+    -webkit-animation-name: none;
+    -moz-animation-name: none;
+    -o-animation-name: none;
+    animation-name: none;
+}
+
+
+/* Table of contents */
+
+.post-aside {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 60px;
+}
+
+.post-aside > * {
+    margin-left: 1em;
+}
+
+.post-aside h3 {
+    margin-block-start: 0px;
+    margin-block-end: 0px;
+    font-size: 15px;
+}
+
+#TableOfContents ol {
+    list-style-type: decimal-leading-zero;
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+    padding-inline-start: 3em;
+}
+
+#TableOfContents li {
+    margin-bottom: 1em;
+}
+
+#TableOfContents ol ol {
+    padding-inline-start: 1em;
+}
+
+/* post info adjustments */
+
+.post .post-footer .meta .info {
+    font-size: 15px;
+}
+
+.post .post-footer .meta a {
+    color: var(--tag-color);
+}
+
+.post .meta .info .date {
+    margin-right: 10px;
+}
+
+
+/* comments */
+#fb_comments_container {
+    margin: 0px;
+    margin-top: 30px;
+}
