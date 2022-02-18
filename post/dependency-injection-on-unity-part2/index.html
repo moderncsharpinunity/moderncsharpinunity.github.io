@@ -1,0 +1,277 @@
+<!doctype html><html lang=en data-theme><head><title>Ruben Gonzalez | Dependency Injection on Unity (Part 2)</title><meta charset=utf-8><meta name=generator content="Hugo 0.74.3"><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name=description content="By Ruben Gonzalez"><link rel=stylesheet href=/css/style.min.5be3a155aa89a24586c761b1b5538c4040e3735ee32ac12a708dc1696c0982f5.css integrity="sha256-W+OhVaqJokWGx2GxtVOMQEDjc17jKsEqcI3BaWwJgvU=" crossorigin=anonymous type=text/css><link rel=stylesheet href=/css/custom.f1a12c82e6cdf7c25ab4773556c96e8cf3ad70297a880c6b929ff96383887ff6.css integrity="sha256-8aEsgubN98JatHc1VslujPOtcCl6iAxrkp/5Y4OIf/Y=" crossorigin=anonymous type=text/css><link rel=stylesheet href=/css/syntax.b15d238552e55faf150d898bbebfee7324d11ecad7f3f927d3ede168d242e160.css integrity="sha256-sV0jhVLlX68VDYmLvr/ucyTRHsrX8/kn0+3haNJC4WA=" crossorigin=anonymous type=text/css><link href=https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css rel=stylesheet integrity=sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN crossorigin=anonymous><link rel="shortcut icon" href=/favicons/favicon.ico type=image/x-icon><link rel=apple-touch-icon sizes=180x180 href=/favicons/apple-touch-icon.png><link rel=icon type=image/png sizes=32x32 href=/favicons/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicons/favicon-16x16.png><link rel=canonical href=/post/dependency-injection-on-unity-part2/><script type=text/javascript src=/js/anatole-header.min.7e2fc0724240b28c6e214687e73a4a6eb6c196bbace546b9dc86e94cca120b5c.js integrity="sha256-fi/AckJAsoxuIUaH5zpKbrbBlrus5Ua53IbpTMoSC1w=" crossorigin=anonymous></script><meta name=twitter:card content="summary"><meta name=twitter:title content="Dependency Injection on Unity (Part 2)"><meta name=twitter:description content="This is the long-awaited continuation of my previous post about dependency injection."></head><body><div class="sidebar animated fadeInDown"><div class=logo-title><div class=title><img src=/rgonzalez_200px.jpg alt="profile picture"><h3><a href=/>Modern C# in Unity3D</a></h3><div class=description><p>By Ruben Gonzalez</p></div></div></div><ul class=social-links><li><a href=https://www.linkedin.com/in/ruben-gonzalez-50a4b230/ rel=me aria-label="Ruben's Linkedin"><i class="fa fa-2x fa-linkedin" aria-hidden=true></i></a></li><li><a href=https://github.com/moderncsharpinunity/ rel=me aria-label="Ruben's GitHub"><i class="fa fa-2x fa-github" aria-hidden=true></i></a></li><li><a href=https://gamasutra.com/blogs/RubenGonzalez/1035428/ rel=me aria-label="Ruben's Gamasutra"><i class="fa fa-2x custom-gamasutra-icon" aria-hidden=true></i></a></li><li><a href=/index.xml rel=me aria-label=RSS><i class="fa fa-2x fa-rss" aria-hidden=true></i></a></li></ul><div class=footer><div class=by_farbox>&copy; Ruben Gonzalez 2022</div></div></div></div><div class=main><div class="page-top animated fadeInDown"><a role=button class=navbar-burger data-target=navMenu aria-label=menu aria-expanded=false><span aria-hidden=true></span><span aria-hidden=true></span><span aria-hidden=true></span></a><ul class=nav id=navMenu><li><a href=/>Home</a></li><li><a href=/post/>Posts</a></li><li><a href=/tags/>Tags</a></li><li><a href=/about/>About</a></li><li class=theme-switch-item><a class=theme-switch title="Switch Theme"><i class="fa fa-adjust fa-fw" aria-hidden=true></i></a></li></ul></div><div class=autopagerize_page_element><div class=content><a name=top></a><div class="post animated fadeInDown"><div class=post-title><h3>Dependency Injection on Unity (Part 2)</h3></div><div class=post-aside><h3><a href=#top>Dependency Injection on Unity (Part 2)</a></h3><nav id=TableOfContents><ol><li><a href=#improving-our-dependency-injection>Improving our dependency injection</a></li><li><a href=#automatic-dependency-injection>Automatic dependency injection</a><ol><li><a href=#attribute-based-injection>Attribute-based injection</a></li><li><a href=#other-types-of-injection>Other types of injection</a></li><li><a href=#note-about-reflection>Note about reflection</a></li></ol></li><li><a href=#dependencies-factories>Dependencies factories</a><ol><li><a href=#from-class>From class</a></li><li><a href=#from-prefab>From prefab</a></li><li><a href=#from-gameobject>From GameObject</a></li></ol></li><li><a href=#initialization-order>Initialization order</a><ol><li><a href=#scene-initialization-order>Scene initialization order</a></li><li><a href=#class-initialization-order>Class initialization order</a></li><li><a href=#prefab-initialization-order>Prefab initialization order</a></li></ol></li><li><a href=#summary>Summary</a></li></ol></nav></div><div class=meta><div class=info><i class="fa fa-sun-o"></i><span class=date>Fri, Feb 18, 2022</span>
+<a class=tag href=/tags/unity3d/>unity3d</a><a class=tag href=/tags/dependency-injection/>dependency-injection</a></div></div><div class=post-content><p>This is the long-awaited continuation of my previous post about <a href=/post/dependency-injection-on-unity/>dependency injection</a>. If you haven&rsquo;t read it yet, it&rsquo;s strongly recommended that you do it now, as this post builds upon knowledge from the previous one.</p><h2 id=improving-our-dependency-injection>Improving our dependency injection</h2><p>If our previous post we had a functional dependency injection system although it had its limitations:</p><ul><li><p>The actual injection was very manual, which is slow, error-prone and, why not say it, a pain in the ass for us lazy programmers.</p></li><li><p>We didn&rsquo;t had control of the dependency injection order, which could potentially lead to us trying to retrieve dependencies that hasn&rsquo;t already be registered.</p></li></ul><p>So lets see what we can do to improve this.</p><h2 id=automatic-dependency-injection>Automatic dependency injection</h2><p>Having to manually retrieve and store each dependency is not ideal, luckily for us there are many ways to automate this.</p><p>One common example would be specifying the dependencies as parameters in the constructor and then using reflection to obtain the parameters list and construct that object with them.</p><p>This would be very handy as having the dependencies in the constructor is quite commonly used and it allows to construct the object manually, which can be useful for unit testing for example.</p><p>The drawback is that <em>MonoBehaviour</em> doesn&rsquo;t allow to use constructors, so this cannot be used with them and we need an alternative.</p><h3 id=attribute-based-injection>Attribute-based injection</h3><p>You know how Unity uses the <em>SerializeField</em> attribute to know what private fields should be serialized? well, we can do something similar, having a custom <em>InjectField</em> attribute we can specify which fields we want to be automatically injected. Creating a custom attribute is easy, just create a class inhering from <em>Attribute</em>:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-csharp data-lang=csharp><span class=k>public</span> <span class=k>class</span> <span class=nc>InjectFieldAttribute</span> <span class=p>:</span> <span class=n>Attribute</span>
+<span class=p>{</span>
+<span class=p>}</span>
+</code></pre></td></tr></table></div></div><p>But the attribute itself does nothing, is just decoration. This is where <a href=https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/reflection>reflection</a> comes handy. For those who doesn&rsquo;t know what reflection is, you can think of it as the ability of the code to know itself (something that people seeks all its life, c# code has it built in). It basically gives you a <em>Type</em> class that defines a type, with all the information about its fields, methods, properties, etc.</p><p>Every object has a <a href="https://docs.microsoft.com/en-us/dotnet/api/system.object.gettype?view=netframework-4.7"><em>GetType()</em></a> and from there we can get all the fields, public or private and then check if they contain the <em>InjectField</em> attribute. If they do, we&rsquo;ll just find the type of the field, get it from the dependencies collection and use the <em>SetValue</em> to establish it.</p><p>Since we can use the <em>InjectField</em> attribute on private fields too, and those are not inherited, we&rsquo;ll start with the fields defined in the actual object type and then move up in the inheritance hierarchy and repeat the process.</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-csharp data-lang=csharp><span class=k>public</span> <span class=kt>object</span> <span class=n>Inject</span><span class=p>(</span><span class=kt>object</span> <span class=n>dependant</span><span class=p>)</span>
+<span class=p>{</span>
+    <span class=n>Type</span> <span class=n>type</span> <span class=p>=</span> <span class=n>dependant</span><span class=p>.</span><span class=n>GetType</span><span class=p>();</span>
+    <span class=k>while</span> <span class=p>(</span><span class=n>type</span> <span class=p>!=</span> <span class=k>null</span><span class=p>)</span>
+    <span class=p>{</span>
+        <span class=kt>var</span> <span class=n>fields</span> <span class=p>=</span> <span class=n>type</span><span class=p>.</span><span class=n>GetFields</span><span class=p>(</span><span class=n>BindingFlags</span><span class=p>.</span><span class=n>Public</span> <span class=p>|</span> <span class=n>BindingFlags</span><span class=p>.</span><span class=n>NonPublic</span> 
+            <span class=p>|</span> <span class=n>BindingFlags</span><span class=p>.</span><span class=n>DeclaredOnly</span> <span class=p>|</span> <span class=n>BindingFlags</span><span class=p>.</span><span class=n>Instance</span><span class=p>);</span>
+        <span class=k>foreach</span> <span class=p>(</span><span class=kt>var</span> <span class=n>field</span> <span class=k>in</span> <span class=n>fields</span><span class=p>)</span>
+        <span class=p>{</span>
+            <span class=k>if</span> <span class=p>(</span><span class=n>field</span><span class=p>.</span><span class=n>GetCustomAttribute</span><span class=p>&lt;</span><span class=n>InjectFieldAttribute</span><span class=p>&gt;(</span><span class=k>false</span><span class=p>)</span> <span class=p>==</span> <span class=k>null</span><span class=p>)</span> <span class=p>{</span> <span class=k>continue</span><span class=p>;</span> <span class=p>}</span>
+
+            <span class=n>field</span><span class=p>.</span><span class=n>SetValue</span><span class=p>(</span><span class=n>dependant</span><span class=p>,</span> <span class=n>Get</span><span class=p>(</span><span class=n>field</span><span class=p>.</span><span class=n>FieldType</span><span class=p>));</span>
+        <span class=p>}</span>
+        <span class=n>type</span> <span class=p>=</span> <span class=n>type</span><span class=p>.</span><span class=n>BaseType</span><span class=p>;</span>
+    <span class=p>}</span>
+    <span class=k>return</span> <span class=n>dependant</span><span class=p>;</span>
+<span class=p>}</span>
+</code></pre></td></tr></table></div></div><p>We&rsquo;ll use <a href="https://docs.microsoft.com/en-us/dotnet/api/system.type.getfields?view=netframework-4.7"><em>GetFields</em></a> with these <a href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.bindingflags?view=netframework-4.7"><em>BindingFlags</em></a> to get the fields we want: <em>BindingFlags.Public</em> and <em>BindingFlags.NonPublic</em> to get all the public, private or protected fields; <em>BindingFlags.DeclaredOnly</em> will get us only the fields declared in the actual type, not inherited ones; and finally, <em>BindingFlags.Instance</em> will get us fields used per instance, which basically all non-static ones.</p><p>We&rsquo;ll also use <a href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.customattributeextensions.getcustomattribute?view=netframework-4.7"><em>GetCustomAttribute(false)</em></a> because we don&rsquo;t want the attribute in the inherited fields, although we shouldn&rsquo;t get any due to <em>BindingFlags.DeclaredOnly</em>, but just in case we want to extend this to properties or anything like that.</p><p>That&rsquo;s it, this <em>Inject</em> method will automatically resolve all the dependencies in our type, declared or inherited, so we lazy programmers don&rsquo;t have to do it manually.</p><p>Previously we had our <em>DependenciesCollection</em> that contained both the <em>Add</em> and the <em>Get</em>, so we could add it there too, but that class is going to start doing too many things, thus we&rsquo;ll split it. We&rsquo;ll keep <em>DependenciesCollection</em> as what it is, just the collection, so it&rsquo;ll be just the <em>Add</em> method, and we&rsquo;ll create a new class <em>DependenciesProvider</em> for the <em>Get</em> and <em>Inject</em> method.</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-csharp data-lang=csharp><span class=k>public</span> <span class=k>class</span> <span class=nc>DependenciesCollection</span> <span class=p>:</span> <span class=n>IEnumerable</span><span class=p>&lt;</span><span class=n>Dependency</span><span class=p>&gt;</span>
+<span class=p>{</span>
+    <span class=k>private</span> <span class=n>List</span><span class=p>&lt;</span><span class=n>Dependency</span><span class=p>&gt;</span> <span class=n>dependencies</span> <span class=p>=</span> <span class=k>new</span> <span class=n>List</span><span class=p>&lt;</span><span class=n>Dependency</span><span class=p>&gt;();</span>
+
+    <span class=k>public</span> <span class=k>void</span> <span class=n>Add</span><span class=p>(</span><span class=n>Dependency</span> <span class=n>dependency</span><span class=p>)</span> <span class=p>=&gt;</span> <span class=n>dependencies</span><span class=p>.</span><span class=n>Add</span><span class=p>(</span><span class=n>dependency</span><span class=p>);</span>
+
+    <span class=k>public</span> <span class=n>IEnumerator</span><span class=p>&lt;</span><span class=n>Dependency</span><span class=p>&gt;</span> <span class=n>GetEnumerator</span><span class=p>()</span> <span class=p>=&gt;</span> <span class=n>dependencies</span><span class=p>.</span><span class=n>GetEnumerator</span><span class=p>();</span>
+
+    <span class=n>IEnumerator</span> <span class=n>IEnumerable</span><span class=p>.</span><span class=n>GetEnumerator</span><span class=p>()</span> <span class=p>=&gt;</span> <span class=n>dependencies</span><span class=p>.</span><span class=n>GetEnumerator</span><span class=p>();</span>
+<span class=p>}</span>
+</code></pre></td></tr></table></div></div><p>If we make <em>DependenciesCollection</em> be an IEnumerable, we can just copy the list of dependencies into <em>DependenciesProvider</em>. Why would we want to do this? We&rsquo;ll see later on the benefits of having a two-steps process in the dependency injection.</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-csharp data-lang=csharp><span class=k>public</span> <span class=k>class</span> <span class=nc>DependenciesProvider</span>
+<span class=p>{</span>
+    <span class=k>private</span> <span class=n>Dictionary</span><span class=p>&lt;</span><span class=n>Type</span><span class=p>,</span> <span class=n>Dependency</span><span class=p>&gt;</span> <span class=n>dependencies</span> <span class=p>=</span> <span class=k>new</span> <span class=n>Dictionary</span><span class=p>&lt;</span><span class=n>Type</span><span class=p>,</span> <span class=n>Dependency</span><span class=p>&gt;();</span>
+    <span class=k>private</span> <span class=n>Dictionary</span><span class=p>&lt;</span><span class=n>Type</span><span class=p>,</span> <span class=kt>object</span><span class=p>&gt;</span> <span class=n>singletons</span> <span class=p>=</span> <span class=k>new</span> <span class=n>Dictionary</span><span class=p>&lt;</span><span class=n>Type</span><span class=p>,</span> <span class=kt>object</span><span class=p>&gt;();</span>
+
+    <span class=k>public</span> <span class=n>DependenciesProvider</span><span class=p>(</span><span class=n>DependenciesCollection</span> <span class=n>dependencies</span><span class=p>)</span>
+    <span class=p>{</span>
+        <span class=k>foreach</span> <span class=p>(</span><span class=kt>var</span> <span class=n>dependency</span> <span class=k>in</span> <span class=n>dependencies</span><span class=p>)</span>
+        <span class=p>{</span>
+            <span class=k>this</span><span class=p>.</span><span class=n>dependencies</span><span class=p>.</span><span class=n>Add</span><span class=p>(</span><span class=n>dependency</span><span class=p>.</span><span class=n>Type</span><span class=p>,</span> <span class=n>dependency</span><span class=p>);</span>
+        <span class=p>}</span>
+    <span class=p>}</span>
+
+    <span class=k>public</span> <span class=kt>object</span> <span class=n>Get</span><span class=p>(</span><span class=n>Type</span> <span class=n>type</span><span class=p>)</span>
+    <span class=p>...</span>
+</code></pre></td></tr></table></div></div><h3 id=other-types-of-injection>Other types of injection</h3><p>Attribute-based injection is not the only choice we have, as mentioned before we can specify our dependencies in a constructor or we can have a special method decorated with an attribute or a predefined name. We&rsquo;ll just need to do a different kind of reflection using <a href="https://docs.microsoft.com/en-us/dotnet/api/system.type.getconstructors?view=netframework-4.7"><em>GetConstructors</em></a> or <a href="https://docs.microsoft.com/en-us/dotnet/api/system.type.getmethods?view=netframework-4.7"><em>GetMethods</em></a> to find the one we want to call, then using <a href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.methodbase.getparameters?view=netframework-4.7#system-reflection-methodbase-getparameters"><em>GetParameters</em></a> to build the array with the dependencies and finally calling <a href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.methodbase.invoke?view=netframework-4.7"><em>Invoke</em></a> with that array. Constructors are just special methods, so the code is quite similar in both cases.</p><p>You can use whatever method you like the most or you can have all three available. Some dependency injection frameworks offer several options for the user to choose, like <a href=https://github.com/modesttree/Zenject>Zenject</a>.</p><p>My personal choice is the attribute based one, because I can use it with both plain classes and <em>MonoBehaviours</em>, although method-based one can also be handy, as it&rsquo;ll also provide a point to do some initialization after the injection happens. Constructor based one is my least favorite, as it&rsquo;s not compatible with <em>MonoBehaviours</em> and when inheriting it forces you to type again the dependencies and we lazy programers don&rsquo;t like to repeat stuff.</p><h3 id=note-about-reflection>Note about reflection</h3><p>One drawback from using reflection is that it&rsquo;s not very performant, so you might want to consider caching some stuff, for example, the <em>GetFields</em> query results. But you should only worry about this if you have lots of objects and you notice performance hiccups due to the injection.</p><p>Another potential issue is that, when building using IL2CPP, Unity strips what it deems as unused code. This can lead to problems when using constructor or method based injection, as Unity won&rsquo;t know that those methods are used. If those problems arises, you can make your attribute inherit from Unity&rsquo;s <em>PreserveAttribute</em>, use link.xml or any other of the possible solutions explained in the <a href=https://docs.unity3d.com/Manual/ManagedCodeStripping.html>code stripping</a> section of Unity docs.</p><h2 id=dependencies-factories>Dependencies factories</h2><p>So how do we use our brand new <em>Inject</em> method? We already had a factory function in our dependencies, so we just need to pass our <em>DependenciesProvider</em> in this factory function. We can create a delegate to avoid having to specify all the parameters on each use.</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-csharp data-lang=csharp><span class=k>public</span> <span class=k>delegate</span> <span class=kt>object</span> <span class=n>Delegate</span><span class=p>(</span><span class=n>DependenciesProvider</span> <span class=n>dependencies</span><span class=p>);</span>
+</code></pre></td></tr></table></div></div><p>For easy of use and to avoid repetition, we&rsquo;ll create some static methods to build this factory functions.</p><h3 id=from-class>From class</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-csharp data-lang=csharp><span class=k>public</span> <span class=k>static</span> <span class=n>Delegate</span> <span class=n>FromClass</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;()</span> <span class=k>where</span> <span class=n>T</span> <span class=p>:</span> <span class=n>class</span><span class=p>,</span> <span class=k>new</span><span class=p>()</span>
+<span class=p>{</span>
+    <span class=k>return</span> <span class=p>(</span><span class=n>dependencies</span><span class=p>)</span> <span class=p>=&gt;</span>
+    <span class=p>{</span>
+        <span class=k>return</span> <span class=n>dependencies</span><span class=p>.</span><span class=n>Inject</span><span class=p>(</span><span class=k>new</span> <span class=n>T</span><span class=p>());</span>
+    <span class=p>};</span>
+<span class=p>}</span>
+</code></pre></td></tr></table></div></div><p>This is quite simple, just a generic function to create an instance using a default constructor and calling <em>Inject</em> right after that. Using the <a href=https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/new-constraint>new constraint</a> allows us to call the default constructor.</p><h3 id=from-prefab>From prefab</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-csharp data-lang=csharp><span class=k>public</span> <span class=k>static</span> <span class=n>Delegate</span> <span class=n>FromPrefab</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;(</span><span class=n>T</span> <span class=n>prefab</span><span class=p>)</span> <span class=k>where</span> <span class=n>T</span> <span class=p>:</span> <span class=n>MonoBehaviour</span>
+<span class=p>{</span>
+    <span class=k>return</span> <span class=p>(</span><span class=n>dependencies</span><span class=p>)</span> <span class=p>=&gt;</span>
+    <span class=p>{</span>
+        <span class=kt>var</span> <span class=n>instance</span> <span class=p>=</span> <span class=n>GameObject</span><span class=p>.</span><span class=n>Instantiate</span><span class=p>(</span><span class=n>prefab</span><span class=p>);</span>
+        <span class=kt>var</span> <span class=n>children</span> <span class=p>=</span> <span class=n>instance</span><span class=p>.</span><span class=n>GetComponentsInChildren</span><span class=p>&lt;</span><span class=n>MonoBehaviour</span><span class=p>&gt;(</span><span class=k>true</span><span class=p>);</span>
+        <span class=k>foreach</span> <span class=p>(</span><span class=kt>var</span> <span class=n>child</span> <span class=k>in</span> <span class=n>children</span><span class=p>)</span>
+        <span class=p>{</span>
+            <span class=n>dependencies</span><span class=p>.</span><span class=n>Inject</span><span class=p>(</span><span class=n>child</span><span class=p>);</span>
+        <span class=p>}</span>
+        <span class=k>return</span> <span class=n>instance</span><span class=p>.</span><span class=n>GetComponent</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;();</span>
+    <span class=p>};</span>
+<span class=p>}</span>
+</code></pre></td></tr></table></div></div><p>This is also quite straight forward, we instantiate the prefab, find all the <em>MonoBehaviours</em> in it and call <em>Inject</em> for each one of them. This might not be very memory efficient if the prefab is quite big and contains a lot of <em>MonoBehaviours</em>, so we might consider using a recursive function to traverse the <a href=https://docs.unity3d.com/ScriptReference/Transform.html>transforms</a> of all the <em>GameObjects</em> and find the <em>MonoBehaviour</em> one at a time.</p><h3 id=from-gameobject>From GameObject</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-csharp data-lang=csharp><span class=k>public</span> <span class=k>static</span> <span class=n>Delegate</span> <span class=n>FromGameObject</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;(</span><span class=n>T</span> <span class=n>instance</span><span class=p>)</span> <span class=k>where</span> <span class=n>T</span> <span class=p>:</span> <span class=n>MonoBehaviour</span>
+<span class=p>{</span>
+    <span class=k>return</span> <span class=p>(</span><span class=n>dependencies</span><span class=p>)</span> <span class=p>=&gt;</span>
+    <span class=p>{</span>
+        <span class=kt>var</span> <span class=n>children</span> <span class=p>=</span> <span class=n>instance</span><span class=p>.</span><span class=n>GetComponentsInChildren</span><span class=p>&lt;</span><span class=n>MonoBehaviour</span><span class=p>&gt;(</span><span class=k>true</span><span class=p>);</span>
+        <span class=k>foreach</span> <span class=p>(</span><span class=kt>var</span> <span class=n>child</span> <span class=k>in</span> <span class=n>children</span><span class=p>)</span>
+        <span class=p>{</span>
+            <span class=n>dependencies</span><span class=p>.</span><span class=n>Inject</span><span class=p>(</span><span class=n>child</span><span class=p>);</span>
+        <span class=p>}</span>
+        <span class=k>return</span> <span class=n>instance</span><span class=p>;</span>
+    <span class=p>};</span>
+<span class=p>}</span>
+</code></pre></td></tr></table></div></div><p>At last, but not least, we can also inject an existing GameObject in the scene, we just need to do the same as with prefabs, find all the <em>MonoBehaviours</em> and call <em>Inject</em> on them. Bear in mind that <em>GetComponentsInChildren</em> also returns the components in the calling object, so the children array will also contain the calling <em>MonoBehaviour</em>.</p><p>With these three we can cover a lot of use cases, and they also serve as a reference to implement some other. I&rsquo;ll leave as an exercise for the reader to implement a factory function from <em>Resources</em> or <em>Addressables</em>.</p><h2 id=initialization-order>Initialization order</h2><p>Ok, now we have an automatic way to inject our dependencies, no more manual process. But that was just half of the problem, the other half is the potential initialization order issues, where and when do we register our dependencies so they&rsquo;re available when we inject them.</p><p>In our previous post we had a <em>DependenciesContext</em> static class to store our <em>DependenciesCollection</em> but nothing else in there. Having it as a static class was not great either, so why not make it a <em>MonoBehaviour</em> instead? We can register all of our dependencies in there and use it as our single point of initialization, so we can control the order and be sure that all of our dependencies are in place before requesting them.</p><p>Remember when we took out the resolving dependencies part from our old <em>DependenciesCollection</em> and moved it into <em>DependenciesProvider</em>? Now it&rsquo;s starting to make more sense as now we can define our dependency injection as a two steps process, register and resolve, and our <em>DependenciesContext</em> can take care of that:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-csharp data-lang=csharp><span class=k>public</span> <span class=k>abstract</span> <span class=k>class</span> <span class=nc>DependenciesContext</span> <span class=p>:</span> <span class=n>MonoBehaviour</span>
+<span class=p>{</span>
+    <span class=k>protected</span> <span class=n>DependenciesCollection</span> <span class=n>dependenciesCollection</span> <span class=p>=</span> <span class=k>new</span> <span class=n>DependenciesCollection</span><span class=p>();</span>
+    <span class=k>private</span> <span class=n>DependenciesProvider</span> <span class=n>dependenciesProvider</span><span class=p>;</span>
+
+
+    <span class=k>private</span> <span class=k>void</span> <span class=n>Awake</span><span class=p>()</span>
+    <span class=p>{</span>
+        <span class=n>DontDestroyOnLoad</span><span class=p>(</span><span class=n>gameObject</span><span class=p>);</span>
+        <span class=n>Setup</span><span class=p>();</span>
+
+        <span class=n>dependenciesProvider</span> <span class=p>=</span> <span class=k>new</span> <span class=n>DependenciesProvider</span><span class=p>(</span><span class=n>dependenciesCollection</span><span class=p>);</span>
+
+        <span class=kt>var</span> <span class=n>children</span> <span class=p>=</span> <span class=n>GetComponentsInChildren</span><span class=p>&lt;</span><span class=n>MonoBehaviour</span><span class=p>&gt;(</span><span class=k>true</span><span class=p>);</span>
+        <span class=k>foreach</span> <span class=p>(</span><span class=kt>var</span> <span class=n>child</span> <span class=k>in</span> <span class=n>children</span><span class=p>)</span>
+        <span class=p>{</span>
+            <span class=n>dependenciesProvider</span><span class=p>.</span><span class=n>Inject</span><span class=p>(</span><span class=n>child</span><span class=p>);</span>
+        <span class=p>}</span>
+
+        <span class=n>Configure</span><span class=p>();</span>
+    <span class=p>}</span>
+
+    <span class=k>protected</span> <span class=k>abstract</span> <span class=k>void</span> <span class=n>Setup</span><span class=p>();</span>
+
+    <span class=k>protected</span> <span class=k>abstract</span> <span class=k>void</span> <span class=n>Configure</span><span class=p>();</span>
+
+<span class=p>}</span>
+</code></pre></td></tr></table></div></div><p>So now we have this abstract class that defines our injection process and from which we can inherit from to implement our two steps initialization.</p><p>First, we implement our custom setup process where we register all the dependencies we need, which are stored in our <em>DependenciesCollection</em>.</p><p>With all of our dependencies already register, then we can convert them into our <em>DependenciesProvider</em>, and then begin the injection process. Since we&rsquo;re a <em>MonoBehaviour</em>, probably in a scene, we want to make sure that all the rest of the <em>MonoBehaviours</em> are injected.</p><p>And then we implement our custom configure process where we can resolve the dependencies we need and start doing our work.</p><p>This is it, right? Now we have a perfectly controlled initialization order, or do we? What if we have a class that wants to use some dependency in its constructor? Or what if we have a <em>MonoBehaviour</em> that needs some dependency in its <em>Awake</em> method?</p><p>We currently don&rsquo;t have control over the <em>Awake</em> execution order, and our dependencies are injected after the constructor or the <em>Awake</em> method is called, so how do we fix this?</p><h3 id=scene-initialization-order>Scene initialization order</h3><p>Unity allows us to define the execution order of the scripts, to guarantee that some scripts will be called before others. We can do this in <em>Project Settings</em>, but we can also use the undocumented but wellknown <em>DefaultExecutionOrder</em> attribute:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-csharp data-lang=csharp><span class=na>[DefaultExecutionOrder(-1)]</span>
+</code></pre></td></tr></table></div></div><p>Just add it to our <em>DependenciesContext</em> class and our <em>Awake</em> will be run before the other <em>MonoBehaviours</em> in the scene, guaranteeing that we can use the dependencies in their <em>Awake</em> methods.</p><h3 id=class-initialization-order>Class initialization order</h3><p>We have a method in c# to construct an object without calling its constructor using <a href=https://docs.microsoft.com/en-us/dotnet/api/system.runtime.serialization.formatterservices.getuninitializedobject><em>FormatterServices.GetUninitializedObject</em></a>. We can then inject our dependencies and then use reflection to call the default constructor.</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-csharp data-lang=csharp><span class=k>public</span> <span class=k>static</span> <span class=n>Delegate</span> <span class=n>FromClass</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;()</span> <span class=k>where</span> <span class=n>T</span> <span class=p>:</span> <span class=n>class</span><span class=p>,</span> <span class=k>new</span><span class=p>()</span>
+<span class=p>{</span>
+    <span class=k>return</span> <span class=p>(</span><span class=n>dependencies</span><span class=p>)</span> <span class=p>=&gt;</span>
+    <span class=p>{</span>
+        <span class=kt>var</span> <span class=n>type</span> <span class=p>=</span> <span class=k>typeof</span><span class=p>(</span><span class=n>T</span><span class=p>);</span>
+        <span class=kt>var</span> <span class=n>obj</span> <span class=p>=</span> <span class=n>FormatterServices</span><span class=p>.</span><span class=n>GetUninitializedObject</span><span class=p>(</span><span class=n>type</span><span class=p>);</span>
+
+        <span class=n>dependencies</span><span class=p>.</span><span class=n>Inject</span><span class=p>(</span><span class=n>obj</span><span class=p>);</span>
+
+        <span class=n>type</span><span class=p>.</span><span class=n>GetConstructor</span><span class=p>(</span><span class=n>Type</span><span class=p>.</span><span class=n>EmptyTypes</span><span class=p>).</span><span class=n>Invoke</span><span class=p>(</span><span class=n>obj</span><span class=p>,</span> <span class=k>null</span><span class=p>);</span>
+
+        <span class=k>return</span> <span class=p>(</span><span class=n>T</span><span class=p>)</span><span class=n>obj</span><span class=p>;</span>
+    <span class=p>};</span>
+<span class=p>}</span>
+</code></pre></td></tr></table></div></div><p>It might look a little bit dodgy, but it&rsquo;s perfectly safe and it&rsquo;s not much different to what Unity does with its <em>SerializeField</em>. Plus we already had the <em>new()</em> constraint so we&rsquo;re sure that we&rsquo;ll have a default constructor to call.</p><h3 id=prefab-initialization-order>Prefab initialization order</h3><p>And finally, we can control the execution order of the <em>Awake</em> in a prefab, because the <em>Awake</em> is not called on instantiation if the <em>GameObject</em> is not active, so we can disable the prefab before instantiating it, inject our dependencies and then activate it to have the <em>Awake</em> called.</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-csharp data-lang=csharp><span class=k>public</span> <span class=k>static</span> <span class=n>Delegate</span> <span class=n>FromPrefab</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;(</span><span class=n>T</span> <span class=n>prefab</span><span class=p>)</span> <span class=k>where</span> <span class=n>T</span> <span class=p>:</span> <span class=n>MonoBehaviour</span>
+<span class=p>{</span>
+    <span class=k>return</span> <span class=p>(</span><span class=n>dependencies</span><span class=p>)</span> <span class=p>=&gt;</span>
+    <span class=p>{</span>
+        <span class=kt>bool</span> <span class=n>wasActive</span> <span class=p>=</span> <span class=n>prefab</span><span class=p>.</span><span class=n>gameObject</span><span class=p>.</span><span class=n>activeSelf</span><span class=p>;</span>
+        <span class=n>prefab</span><span class=p>.</span><span class=n>gameObject</span><span class=p>.</span><span class=n>SetActive</span><span class=p>(</span><span class=k>false</span><span class=p>);</span>
+        <span class=kt>var</span> <span class=n>instance</span> <span class=p>=</span> <span class=n>GameObject</span><span class=p>.</span><span class=n>Instantiate</span><span class=p>(</span><span class=n>prefab</span><span class=p>);</span>
+        <span class=n>prefab</span><span class=p>.</span><span class=n>gameObject</span><span class=p>.</span><span class=n>SetActive</span><span class=p>(</span><span class=n>wasActive</span><span class=p>);</span>
+        <span class=kt>var</span> <span class=n>children</span> <span class=p>=</span> <span class=n>instance</span><span class=p>.</span><span class=n>GetComponentsInChildren</span><span class=p>&lt;</span><span class=n>MonoBehaviour</span><span class=p>&gt;(</span><span class=k>true</span><span class=p>);</span>
+        <span class=k>foreach</span> <span class=p>(</span><span class=kt>var</span> <span class=n>child</span> <span class=k>in</span> <span class=n>children</span><span class=p>)</span>
+        <span class=p>{</span>
+            <span class=n>dependencies</span><span class=p>.</span><span class=n>Inject</span><span class=p>(</span><span class=n>child</span><span class=p>);</span>
+        <span class=p>}</span>
+        <span class=n>instance</span><span class=p>.</span><span class=n>gameObject</span><span class=p>.</span><span class=n>SetActive</span><span class=p>(</span><span class=n>wasActive</span><span class=p>);</span>
+        <span class=k>return</span> <span class=n>instance</span><span class=p>.</span><span class=n>GetComponent</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;();</span>
+    <span class=p>};</span>
+<span class=p>}</span>
+</code></pre></td></tr></table></div></div><p>We want to be nice, so we&rsquo;ll preserve the active state of the prefab, instead of forcing it to be active right after, as this could lead to unexpected instantiation of dependencies.</p><h2 id=summary>Summary</h2><p>This dependency injection thing is starting to look quite good: we have an automated way to inject our dependencies so no more manual work; we have a perfect control on the initialization order so we can be sure that our dependencies will be ready when we need them; and we have a nice <em>DependenciesContext</em> that is not longer static and allows us to use a two step process in the initialization plus can also serve as the entry point of our application.</p><p>I hope this two-part article has helped you to be unafraid of dependency injection, so now you can start enjoying its benefits, whether it&rsquo;s unit testing, decoupling or just simply more organized code. You can see all the code from this article along with some sample usage in my GitHub repository called <a href=https://github.com/moderncsharpinunity/SimpleDependencyInjectionV2>SimpleDependencyInjectionV2</a>.</p><p>There might be a third part, covering a fully-fledged dependency injection framework based on what we have learn here, but there will definitely be more articles on some other scary-looking-but-worth-learning stuff like unit testing, async programming or fancy c# syntax, so stay tuned for more.</p></div><div class=post-footer><div class=info></div></div><div id=fb_comments_container><h2>Comments</h2><div id=disqus_thread></div><script type=application/javascript>var disqus_config=function(){};(function(){if(["localhost","127.0.0.1"].indexOf(window.location.hostname)!=-1){document.getElementById('disqus_thread').innerHTML='Disqus comments not available by default when the website is previewed locally.';return;}
+var d=document,s=d.createElement('script');s.async=true;s.src='//'+"moderncsharpinunity"+'.disqus.com/embed.js';s.setAttribute('data-timestamp',+new Date());(d.head||d.body).appendChild(s);})();</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript>comments powered by Disqus.</a></noscript><a href=https://disqus.com class=dsq-brlink>comments powered by <span class=logo-disqus>Disqus</span></a></div></div></div></div></div></body><script type=text/javascript src=/js/jquery.min.86b1e8f819ee2d9099a783e50b49dff24282545fc40773861f9126b921532e4c.js integrity="sha256-hrHo+BnuLZCZp4PlC0nf8kKCVF/EB3OGH5EmuSFTLkw=" crossorigin=anonymous></script><script type=text/javascript src=/js/bundle.min.0f9c74cb78f13d1f15f33daff4037c70354f98acfbb97a6f61708966675c3cae.js integrity="sha256-D5x0y3jxPR8V8z2v9AN8cDVPmKz7uXpvYXCJZmdcPK4=" crossorigin=anonymous></script><script type=text/javascript src=/js/medium-zoom.min.92f21c856129f84aeb719459b3e6ac621a3032fd7b180a18c04e1d12083f8aba.js integrity="sha256-kvIchWEp+ErrcZRZs+asYhowMv17GAoYwE4dEgg/iro=" crossorigin=anonymous></script><script type=application/javascript>var doNotTrack=false;if(!doNotTrack){window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;ga('create','UA-177026267-1','auto');ga('send','pageview');}</script><script async src=https://www.google-analytics.com/analytics.js></script></html></body></html>
